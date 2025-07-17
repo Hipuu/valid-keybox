@@ -1,0 +1,66 @@
+name: Keybox Grab and Check
+
+on:
+  workflow_dispatch:  # Only manual trigger
+
+jobs:
+  keybox:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}  # Use your custom secret name
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Prepare directories
+        run: |
+          mkdir -p keys
+          touch cache.txt
+
+      - name: Run keyboxer.py (grab keyboxes)
+        run: python keyboxer.py
+
+      - name: Upload valid keyboxes as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: valid-keyboxes
+          path: keys/*.xml
+
+      - name: Send Keyboxes to Telegram
+        # This action sends files and messages to Telegram.
+        # Using a specific version (e.g., v0.1.1) is recommended for stability.
+        uses: appleboy/telegram-action@master
+        with:
+          # The Telegram chat ID where the files will be sent.
+          # This should be stored as a GitHub secret.
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # The Telegram bot token obtained from BotFather.
+          # This should also be stored as a GitHub secret.
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          # A message to accompany the files. Markdown is supported.
+          message: |
+            *New Keyboxes Available!*
+            Workflow Run: `#${{ github.run_number }}`
+            Repository: `${{ github.repository }}`
+            Commit: `${{ github.sha }}`
+            [View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          # The files to send. This supports glob patterns (e.g., keys/*.xml).
+          # All files matching this pattern will be sent individually.
+          files: keys/*.xml
+          # Optional: Set to 'true' to send the message silently (without a notification sound).
+          disable_notification: true
+          # Optional: Set to 'true' to disable web page preview for links in the message.
+          disable_web_page_preview: true
+          # Optional: Specify the parse mode for the message (e.g., MarkdownV2, HTML).
+          # Default is Markdown.
+          parse_mode: MarkdownV2
