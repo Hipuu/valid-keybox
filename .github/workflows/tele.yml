@@ -68,9 +68,6 @@ jobs:
           # A message to accompany the files. Markdown is supported by default.
           message: |
             ✨📦🔑 *NEW KEYBOXES AVAILABLE!* 🔑📦✨
-            ------------------------------------
-            # Tiêu đề bắt mắt cho thông báo Keybox mới.
-            # Thông tin chi tiết về Workflow Run, Repository, Commit và link đã được loại bỏ.
           # Sending the zipped archive as a document.
           document: keyboxes.zip
           # Optional: Set to 'true' to send the message silently.
