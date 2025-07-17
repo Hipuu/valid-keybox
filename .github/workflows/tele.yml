@@ -30,17 +30,25 @@ jobs:
       - name: Run keyboxer.py (grab keyboxes)
         run: python keyboxer.py
 
-      # --- NEW DEBUGGING STEP ---
+      # --- DEBUGGING STEP (KEEP FOR CONFIRMATION) ---
       - name: List files in keys directory (for debugging)
         run: |
           echo "Listing files in keys/ directory:"
           ls -l keys/
           echo "Checking if any .xml files exist:"
           find keys/ -name "*.xml"
-        # Continue on error so the workflow doesn't stop here,
-        # allowing the Telegram step to still run and show its behavior.
         continue-on-error: true
-      # --- END NEW DEBUGGING STEP ---
+      # --- END DEBUGGING STEP ---
+
+      # --- NEW STEP: Zip keybox files ---
+      - name: Zip Keybox Files
+        run: |
+          zip -j keyboxes.zip keys/*.xml
+          echo "Listing zipped file:"
+          ls -l keyboxes.zip
+        # The -j option in zip means "junk paths", so it only stores the file names
+        # inside the zip, not the 'keys/' directory structure.
+      # --- END NEW STEP ---
 
       - name: Upload valid keyboxes as artifact
         uses: actions/upload-artifact@v4
@@ -50,29 +58,24 @@ jobs:
 
       - name: Send Keyboxes to Telegram
         # This action sends files and messages to Telegram.
-        # Pinning to a specific version (v0.1.1) to ensure 'files' and 'parse_mode' are supported.
+        # Pinning to a specific version (v0.1.1) to ensure 'document' is supported.
         uses: appleboy/telegram-action@v0.1.1
         with:
           # The Telegram chat ID where the files will be sent.
-          # This should be stored as a GitHub secret.
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           # The Telegram bot token obtained from BotFather.
-          # This should also be stored as a GitHub secret.
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          # A message to accompany the files. Markdown is supported.
+          # A message to accompany the files. Markdown is supported by default.
           message: |
             *New Keyboxes Available!*
             Workflow Run: `#${{ github.run_number }}`
             Repository: `${{ github.repository }}`
             Commit: `${{ github.sha }}`
             [View Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          # The files to send. This supports glob patterns (e.g., keys/*.xml).
-          # All files matching this pattern will be sent individually.
-          files: keys/*.xml
-          # Optional: Set to 'true' to send the message silently (without a notification sound).
+          # Sending the zipped archive as a document.
+          document: keyboxes.zip
+          # Optional: Set to 'true' to send the message silently.
           disable_notification: true
-          # Optional: Set to 'true' to disable web page preview for links in the message.
+          # Optional: Set to 'true' to disable web page preview for links.
           disable_web_page_preview: true
-          # Optional: Specify the parse mode for the message (e.g., MarkdownV2, HTML).
-          # Default is Markdown.
-          parse_mode: MarkdownV2
+          # Removed 'parse_mode' as it caused an unexpected input warning.
