@@ -92,14 +92,22 @@ def keybox_check(certificate_text):
         return False
 
     try:
-        certificate = x509.load_pem_x509_certificate(pem_certificates[0].encode(), default_backend())
+        certificate = None
         try:
-            private_key = re.sub(re.compile(r"^\s+", re.MULTILINE), "", private_key)
-            private_key = serialization.load_pem_private_key(
-                private_key.encode(), password=None, backend=default_backend()
+            certificate = x509.load_pem_x509_certificate(pem_certificates[0].encode(), default_backend())
+        except Exception as e:
+            print(f"[Keybox Check Error]: Failed to load certificate PEM: {e}")
+            return False
+
+        check_private_key = False
+        try:
+            private_key_clean = re.sub(re.compile(r"^\s+", re.MULTILINE), "", private_key)
+            private_key_obj = serialization.load_pem_private_key(
+                private_key_clean.encode(), password=None, backend=default_backend()
             )
             check_private_key = True
-        except Exception:
+        except Exception as e:
+            print(f"[Keybox Check Error]: Failed to load private key PEM: {e}")
             check_private_key = False
     except Exception as e:
         print(f"[Keybox Check Error]: {e}")
@@ -117,7 +125,7 @@ def keybox_check(certificate_text):
 
     # Private Key Verification
     if check_private_key:
-        private_key_public_key = private_key.public_key()
+        private_key_public_key = private_key_obj.public_key()
         certificate_public_key = certificate.public_key()
         if not compare_keys(private_key_public_key, certificate_public_key):
             return False
