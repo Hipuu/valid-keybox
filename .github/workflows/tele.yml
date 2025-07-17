@@ -1,4 +1,4 @@
-name: Keybox Grab and Check (tele)
+name: Keybox Grab and Check
 
 on:
   workflow_dispatch:  # Only manual trigger
@@ -29,6 +29,18 @@ jobs:
 
       - name: Run keyboxer.py (grab keyboxes)
         run: python keyboxer.py
+
+      # --- NEW DEBUGGING STEP ---
+      - name: List files in keys directory (for debugging)
+        run: |
+          echo "Listing files in keys/ directory:"
+          ls -l keys/
+          echo "Checking if any .xml files exist:"
+          find keys/ -name "*.xml"
+        # Continue on error so the workflow doesn't stop here,
+        # allowing the Telegram step to still run and show its behavior.
+        continue-on-error: true
+      # --- END NEW DEBUGGING STEP ---
 
       - name: Upload valid keyboxes as artifact
         uses: actions/upload-artifact@v4
