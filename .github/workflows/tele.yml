@@ -50,8 +50,8 @@ jobs:
 
       - name: Send Keyboxes to Telegram
         # This action sends files and messages to Telegram.
-        # Using a specific version (e.g., v0.1.1) is recommended for stability.
-        uses: appleboy/telegram-action@master
+        # Pinning to a specific version (v0.1.1) to ensure 'files' and 'parse_mode' are supported.
+        uses: appleboy/telegram-action@v0.1.1
         with:
           # The Telegram chat ID where the files will be sent.
           # This should be stored as a GitHub secret.
