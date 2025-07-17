@@ -275,6 +275,8 @@ def fetch_and_process_results(page: int) -> bool:
                 # Hash the canonical XML
                 hash_value = hashlib.sha256(canonical_xml).hexdigest()
                 file_name_save = save / (hash_value + ".xml")
+                # Ensure the save directory exists
+                save.mkdir(parents=True, exist_ok=True)
                 if not file_name_save.exists() and file_content and keybox_check(file_content):
                     print(f"{raw_url} is new and valid")
                     with open(file_name_save, "wb") as f:
@@ -299,11 +301,21 @@ while fetch_and_process_results(page):
 # update cache
 open(cache_file, "w").writelines(cached_urls)
 
+import json
+
+source_map_file = save / "source_map.json"
+if source_map_file.exists():
+    with open(source_map_file, "r", encoding="utf-8") as f:
+        source_map = json.load(f)
+else:
+    source_map = {}
+
 for file_path in save.glob("*.xml"):
     file_content = file_path.read_bytes()  # Read file content as bytes
     # Run CheckValid to determine if the file is still valid
     if keybox_check(file_content):
-        print(f"Valid keybox found: {file_path.name} (from saved file)")
+        source_url = source_map.get(file_path.name, "Unknown source")
+        print(f"Valid keybox found: {file_path.name} (from saved file, source: {source_url})")
     else:
         # Prompt user for deletion
         user_input = input(f"File '{file_path.name}' is no longer valid. Do you want to delete it? (y/N): ")
@@ -311,9 +323,16 @@ for file_path in save.glob("*.xml"):
             try:
                 file_path.unlink()  # Delete the file
                 print(f"Deleted file: {file_path.name}")
+                # Remove from source_map
+                if file_path.name in source_map:
+                    del source_map[file_path.name]
             except OSError as e:
                 print(f"Error deleting file {file_path.name}: {e}")
         else:
             print(f"Kept file: {file_path.name}")
+
+# Save updated source_map
+with open(source_map_file, "w", encoding="utf-8") as f:
+    json.dump(source_map, f, indent=2)
 
 # --- keyboxer.py content end ---
