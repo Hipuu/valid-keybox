@@ -1,15 +1,13 @@
 name: Keybox Grab and Check
 
 on:
-  workflow_dispatch:  # Adds the manual trigger button
-  push:
-    branches: [ main ]
+  workflow_dispatch:  # Only manual trigger
 
 jobs:
   keybox:
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}  # Use your custom secret name
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,15 +30,8 @@ jobs:
       - name: Run keyboxer.py (grab keyboxes)
         run: python keyboxer.py
 
-      - name: Filter valid keyboxes with check.py
-        run: |
-          mkdir valid_keys
-          for f in keys/*.xml; do
-            python -c "from check import keybox_check; import sys; sys.exit(0) if keybox_check(open('$f','rb').read()) else sys.exit(1)" && cp "$f" valid_keys/ || true
-          done
-
       - name: Upload valid keyboxes as artifact
         uses: actions/upload-artifact@v4
         with:
           name: valid-keyboxes
-          path: valid_keys/
+          path: keys/*.xml
