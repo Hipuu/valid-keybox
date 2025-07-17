@@ -1,4 +1,4 @@
-name: Keybox Grab and Check
+name: idk
 
 on:
   workflow_dispatch:  # Only manual trigger
