@@ -1,0 +1,9 @@
+pixel.facebook.com
+an.facebook.com
+ads-api.tiktok.com
+analytics.tiktok.com
+ads-sg.tiktok.com
+analytics-sg.tiktok.com
+business-api.tiktok.com
+ads.tiktok.com
+log.byteoversea.com
